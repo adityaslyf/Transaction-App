@@ -1,66 +1,46 @@
-const express = require("express");
-const router = express.Router();
-const { z } = require("zod");
-const { User } = require("../db");
+const express = require("express")
+const router = express.Router()
+const zod = require('zod')
+const jwt = require("jsonwebtoken ")
 const { JWT_SECRET } = require("../config");
+const signupSchema =zod.object({
+  username: zod.string(),
+  // email: zod.string.email(),
+  // age:zod.ZodNumber.optional()
+  password: zod.string(),
+  firstName: zod.string(),
+  lastName: zod.string()
+})
 
-const signupBody = z.object({
-  username: z.string().min(4),
-  password: z.string().min(6),
-  firstName: z.string().min(4),
-  lastName: z.string().min(3),
-});
+routes.post('/signup ', async (req,res)=> {
+   const body = req.body;
+   const {success} = signupSchema.safeParse(req.body)
+   if(!success){
+    return res.json({
+      message: " Email alredy taken/input field"
+    })
+   }
+    
 
-router.post("/signup", async (req, res) => {
-  const userData = signupBody.safeParse(req.body);
-  if (!userData.success) {
-    return res.status(411).json({
-      message: "Invalid input",
-    });
-  }
-  const existingUser = await User.findOne({
-    username: req.body.username,
-  });
-  if (existingUser) {
-    return res.status(400).json({ message: "User already exists" });
-  }
-  const user = await User.create({
-    username: req.body.username,
-    password: req.body.password,
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-  });
-  const userId = user._id;
-  const token = jwt.sign(
-    {
-      userId,
-    },
-    JWT_SECRET
-  );
+const user = User.findOne({
+  username: body.username
+})
 
-  res.json({
-    message: "User created successfully",
-    token,
-  });
-});
+if(user_id){
+  return res.json({
+    message: " Email alredy taken/input field"
+  })
+}
+const dbUser = await User.create(body)
+const token = jwt.signin({
+  userId: dbUser,_id
+} , JWT_SECRET )
+res.json({
+  message:"User created successfully ",
+  token:token
+})
 
-router.post("/signin", async (req, res) => {
-  const { username, password } = req.body;
-  const existingUser = await User.findOne({
-    username,
-  });
-  if (password !== existingUser.password) {
-    return res.status(401).json({ message: "Invalid password" });
-  }
-  const token = jwt.sign(
-    {
-      userId: existingUser._id,
-    },
-    JWT_SECRET
-  );
-  return res.status(200).json({
-    token,
-  });
-});
+})
+ 
 
-module.exports = router;
+module.exports = router 
