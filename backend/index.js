@@ -1,9 +1,11 @@
 const express = require("express");
-const mainRouter = require("./routes/index");
-const userRouter = require("./routes/user");
 
 const app = express();
 const cors = require("cors");
+
+const mainRouter = require("./routes/index");
+const userRouter = require("./routes/user");
+
 
 app.use(express.urlencoded({ extended: false }));
 
